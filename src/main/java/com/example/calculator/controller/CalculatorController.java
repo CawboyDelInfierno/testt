@@ -46,6 +46,41 @@ public class CalculatorController {
         );
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/multiply")
+    public ResponseEntity<Map<String, Object>> multiply(@RequestParam double a, @RequestParam double b) {
+        double result = a * b;
+        Map<String, Object> response = Map.of(
+            "operation", "multiply",
+            "a", a,
+            "b", b,
+            "result", result
+        );
+        return ResponseEntity.ok(response);
+    }
 
-  
+    @GetMapping("/div")
+    public ResponseEntity<?> divide(@RequestParam double a, @RequestParam double b) {
+        
+        if (b == 0) {
+            return ResponseEntity.badRequest().body(
+                    Map.of(
+                            "error", "Division by zero is not allowed",
+                            "a", a,
+                            "b", b
+                    )
+            );
+        }
+
+        double result = a / b;
+        
+        return ResponseEntity.ok(
+                Map.of(
+                        "operation", "division",
+                        "a", a,
+                        "b", b,
+                        "result", result
+                )
+        );
+    }
 }

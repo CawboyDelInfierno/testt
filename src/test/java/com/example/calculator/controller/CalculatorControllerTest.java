@@ -102,6 +102,170 @@ class CalculatorControllerTest {
                 .andExpect(jsonPath("$.result").value(expectedResult));
     }
 
+    // --- Tests per a l'endpoint /div ---
+
+    @Test
+    void testDivEndpoint_Success() throws Exception {
+        performGetRequest("/calculator/div", "10", "2")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.operation").value("division"))
+                .andExpect(jsonPath("$.a").value(10.0))
+                .andExpect(jsonPath("$.b").value(2.0))
+                .andExpect(jsonPath("$.result").value(5.0));
+    }
+
+    @Test
+    void testDivWithNegativeNumbers() throws Exception {
+        performGetRequest("/calculator/div", "-10", "2")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(-5.0));
+    }
+
+    @Test
+    void testDivWithDecimalResult() throws Exception {
+        performGetRequest("/calculator/div", "5", "2")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(2.5));
+    }
+
+    @Test
+    void testDivByZero_BadRequest() throws Exception {
+        performGetRequest("/calculator/div", "10", "0")
+                .andExpect(status().isBadRequest()) // Espera 400 Bad Request
+                .andExpect(jsonPath("$.error").value("Division by zero is not allowed"))
+                .andExpect(jsonPath("$.a").value(10.0))
+                .andExpect(jsonPath("$.b").value(0.0));
+    }
+
+    @Test
+    void testDivZeroByNumber() throws Exception {
+        performGetRequest("/calculator/div", "0", "5")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(0.0));
+    }
+
+    @Test
+    void testDivNegativeDividend() throws Exception {
+        performGetRequest("/calculator/div", "-15", "3")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(-5.0));
+    }
+
+    @Test
+    void testDivNegativeDivisor() throws Exception {
+        performGetRequest("/calculator/div", "15", "-3")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(-5.0));
+    }
+
+    @Test
+    void testDivBothNegative() throws Exception {
+        performGetRequest("/calculator/div", "-12", "-4")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(3.0));
+    }
+
+    // Test parametritzat per a múltiples casos
+    @ParameterizedTest
+    @CsvSource({
+        "10, 2, 5.0",
+        "15, 3, 5.0",
+        "20, 4, 5.0",
+        "25, 5, 5.0",
+        "-10, 2, -5.0",
+        "10, -2, -5.0",
+        "-10, -2, 5.0",
+        "5, 2, 2.5",
+        "1, 3, 0.3333333333333333",
+        "0, 5, 0.0",
+        "100, 10, 10.0",
+        "7.5, 2.5, 3.0"
+    })
+    void testDivEndpoint_Parametrized(String a, String b, double expectedResult) throws Exception {
+        performGetRequest("/calculator/div", a, b)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.operation").value("division"))
+                .andExpect(jsonPath("$.a").value(Double.parseDouble(a)))
+                .andExpect(jsonPath("$.b").value(Double.parseDouble(b)))
+                .andExpect(jsonPath("$.result").value(expectedResult));
+    }
+
+    // Test parametritzat específic per a casos d'error (divisió per zero)
+    @ParameterizedTest
+    @CsvSource({
+        "10, 0",
+        "-5, 0",
+        "0, 0",
+        "100.5, 0",
+        "-50.25, 0"
+    })
+    void testDivByZero_Parametrized(String a, String b) throws Exception {
+        performGetRequest("/calculator/div", a, b)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Division by zero is not allowed"))
+                .andExpect(jsonPath("$.a").value(Double.parseDouble(a)))
+                .andExpect(jsonPath("$.b").value(Double.parseDouble(b)));
+    }
+    //testmultiplicacion
+ // --- Tests per a l'endpoint /multiply ---
+
+    @Test
+    void testMultiplyEndpoint_Success() throws Exception {
+        performGetRequest("/calculator/multiply", "3", "4")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.operation").value("multiply"))
+                .andExpect(jsonPath("$.a").value(3.0))
+                .andExpect(jsonPath("$.b").value(4.0))
+                .andExpect(jsonPath("$.result").value(12.0));
+    }
+
+    @Test
+    void testMultiplyWithZero() throws Exception {
+        performGetRequest("/calculator/multiply", "0", "5")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(0.0));
+    }
+
+    @Test
+    void testMultiplyWithNegativeNumbers() throws Exception {
+        performGetRequest("/calculator/multiply", "-3", "4")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(-12.0));
+    }
+
+    @Test
+    void testMultiplyBothNegative() throws Exception {
+        performGetRequest("/calculator/multiply", "-3", "-4")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value(12.0));
+    }
+
+    @Test
+    void testMultiplyMissingParameter() throws Exception {
+        mockMvc.perform(get("/calculator/multiply").param("a", "5"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "2, 3, 6.0",
+        "-2, 3, -6.0",
+        "2, -3, -6.0",
+        "-2, -3, 6.0",
+        "0, 5, 0.0",
+        "5, 0, 0.0",
+        "1.5, 2.0, 3.0"
+    })
+    void testMultiplyEndpoint_Parametrized(String a, String b, double expectedResult) throws Exception {
+        performGetRequest("/calculator/multiply", a, b)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.operation").value("multiply"))
+                .andExpect(jsonPath("$.a").value(Double.parseDouble(a)))
+                .andExpect(jsonPath("$.b").value(Double.parseDouble(b)))
+                .andExpect(jsonPath("$.result").value(expectedResult));
+    }
+
+
 /* EXEMPLE USANT VARIS PARAMETRES
     // --- Tests per a l'endpoint /subtract ---
 
